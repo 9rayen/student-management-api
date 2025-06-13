@@ -7,6 +7,7 @@ A comprehensive RESTful API for student management built with Spring Boot, featu
 - **JWT Authentication**: Secure token-based authentication with role-based access control
 - **Complete CRUD Operations**: Create, read, update, and delete students
 - **Advanced Search & Filtering**: Multiple search endpoints with pagination and sorting
+- **External API Integration**: Call third-party APIs through your secure endpoints
 - **Role-Based Security**: USER and ADMIN roles with different permissions
 - **Statistics & Analytics**: Comprehensive student statistics and age analytics
 - **Interactive API Documentation**: Swagger/OpenAPI integration
@@ -99,6 +100,13 @@ curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
 - `GET /api/v1/student/statistics` - Comprehensive student statistics
 - `GET /api/v1/student/count` - Total student count
 
+### External API Integration
+- `POST /api/v1/external/call` - Generic external API caller
+- `GET /api/v1/external/joke` - Get random jokes from external API
+- `GET /api/v1/external/user/{id}` - Get user data from JSONPlaceholder
+- `POST /api/v1/external/create-post` - Create test posts on external API
+- `GET /api/v1/external/health` - External API service health check
+
 ## 🔍 Example Usage
 
 ### Get All Students
@@ -142,6 +150,7 @@ src/
 │   ├── java/com/example/demo/
 │   │   ├── config/          # JWT and Security configuration
 │   │   ├── controller/      # REST controllers
+│   │   ├── service/         # Business logic and external API services
 │   │   ├── student/         # Student domain (Entity, Repository, Service, Controller)
 │   │   └── DemoApplication.java
 │   └── resources/
@@ -151,8 +160,43 @@ src/
 ├── API_ENDPOINTS.md         # Detailed API documentation
 ├── API_TESTING_GUIDE.md     # Testing guide with examples
 ├── JWT_AUTHENTICATION_GUIDE.md # JWT implementation guide
+├── EXTERNAL_API_INTEGRATION_GUIDE.md # External API integration guide
+├── EXTERNAL_API_QUICK_REFERENCE.md  # Quick reference for external APIs
 └── README.md               # This file
 ```
+
+## 🌐 External API Integration
+
+This API includes powerful external API integration capabilities that allow you to call third-party APIs securely through your authenticated endpoints.
+
+### Features
+- **Generic API Caller**: Call any external REST API
+- **Pre-built Integrations**: Ready-to-use integrations with popular APIs
+- **Secure Proxy**: All external calls go through your authenticated API
+- **Error Handling**: Comprehensive error handling and timeout management
+
+### Quick Example
+```bash
+# Call GitHub API through your API
+curl -X POST "http://localhost:8080/api/v1/external/call" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://api.github.com/users/octocat",
+    "method": "GET"
+  }'
+```
+
+### 📖 External API Documentation
+- **[Complete Integration Guide](EXTERNAL_API_INTEGRATION_GUIDE.md)** - Comprehensive guide with all endpoints and examples
+- **[Quick Reference](EXTERNAL_API_QUICK_REFERENCE.md)** - Quick start guide with popular APIs and test commands
+
+### Available External Endpoints
+- `POST /api/v1/external/call` - Generic external API caller
+- `GET /api/v1/external/joke` - Get random jokes
+- `GET /api/v1/external/user/{id}` - Get user data from JSONPlaceholder
+- `POST /api/v1/external/create-post` - Create test posts
+- `GET /api/v1/external/health` - Service health check
 
 ## 🔧 Configuration
 
