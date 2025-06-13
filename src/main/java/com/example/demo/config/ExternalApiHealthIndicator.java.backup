@@ -1,0 +1,50 @@
+package com.example.demo.config;
+
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuator.health.Health;
+import org.springframework.boot.actuator.health.HealthIndicator;
+import org.springframework.stereotype.Component;
+
+import com.example.demo.service.ExternalApiService;
+
+/**
+ * Custom health indicator to check external API connectivity
+ */
+@Component("externalApi")
+public class ExternalApiHealthIndicator implements HealthIndicator {
+
+    @Autowired
+    private ExternalApiService externalApiService;
+
+    @Override
+    public Health health() {
+        try {
+            // Test external API connectivity with a simple call
+            Map<String, Object> jokeResponse = externalApiService.getRandomJoke();
+            
+            if (jokeResponse.containsKey("error") && (Boolean) jokeResponse.get("error")) {
+                return Health.down()
+                        .withDetail("external-api", "Failed to connect to external APIs")
+                        .withDetail("error", jokeResponse.get("message"))
+                        .withDetail("test-endpoint", "https://official-joke-api.appspot.com/random_joke")
+                        .build();
+            }
+            
+            return Health.up()
+                    .withDetail("external-api", "External APIs are accessible")
+                    .withDetail("test-endpoint", "https://official-joke-api.appspot.com/random_joke")
+                    .withDetail("last-check", System.currentTimeMillis())
+                    .withDetail("response-status", jokeResponse.get("status"))
+                    .build();
+                    
+        } catch (Exception e) {
+            return Health.down()
+                    .withDetail("external-api", "External API health check failed")
+                    .withDetail("error", e.getMessage())
+                    .withDetail("test-endpoint", "https://official-joke-api.appspot.com/random_joke")
+                    .build();
+        }
+    }
+}

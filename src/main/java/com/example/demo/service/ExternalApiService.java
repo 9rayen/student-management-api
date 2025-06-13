@@ -38,7 +38,8 @@ public class ExternalApiService {
      * @param headers Optional headers
      * @param queryParams Optional query parameters
      * @return Response as a Map
-     */    public Map<String, Object> getFromExternalApi(String url, Map<String, String> headers, Map<String, String> queryParams) {
+     */
+    public Map<String, Object> getFromExternalApi(String url, Map<String, String> headers, Map<String, String> queryParams) {
         try {
             // Build URL with query parameters
             UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(url);
@@ -98,7 +99,8 @@ public class ExternalApiService {
      * @param requestBody The request body
      * @param headers Optional headers
      * @return Response as a Map
-     */    public Map<String, Object> postToExternalApi(String url, Object requestBody, Map<String, String> headers) {
+     */
+    public Map<String, Object> postToExternalApi(String url, Object requestBody, Map<String, String> headers) {
         try {
             // Set headers
             HttpHeaders httpHeaders = new HttpHeaders();
@@ -153,7 +155,8 @@ public class ExternalApiService {
      * @param requestBody Optional request body
      * @param headers Optional headers
      * @return Response as a Map
-     */    public Map<String, Object> callExternalApi(String url, HttpMethod method, Object requestBody, Map<String, String> headers) {
+     */
+    public Map<String, Object> callExternalApi(String url, HttpMethod method, Object requestBody, Map<String, String> headers) {
         try {
             // Set headers
             HttpHeaders httpHeaders = new HttpHeaders();
@@ -198,14 +201,16 @@ public class ExternalApiService {
             errorResponse.put("message", "Failed to call external API: " + e.getMessage());
             return errorResponse;
         }
-    }    /**
+    }
+
+    /**
      * Parse response from external API
      */
     private Map<String, Object> parseResponse(ResponseEntity<String> response) {
         Map<String, Object> result = new HashMap<>();
         result.put("status", response.getStatusCode().value());
         result.put("headers", response.getHeaders().toSingleValueMap());
-          try {
+        try {
             // Try to parse as JSON
             JsonNode jsonNode = objectMapper.readTree(response.getBody());
             result.put("data", objectMapper.convertValue(jsonNode, Map.class));
@@ -214,7 +219,8 @@ public class ExternalApiService {
             result.put("data", response.getBody());
         }
         
-        return result;    }
+        return result;
+    }
 
     /**
      * Call a public API example (no authentication required)

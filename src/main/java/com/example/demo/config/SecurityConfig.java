@@ -50,8 +50,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http, 
                                          JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)).authorizeHttpRequests(authz -> authz
+                .csrf(csrf -> csrf.disable())                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)).authorizeHttpRequests(authz -> authz
                         // Allow authentication endpoints
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         
@@ -60,6 +59,8 @@ public class SecurityConfig {
                         
                         // Allow Swagger UI and API docs
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**").permitAll()
+                          // Allow Actuator endpoints (temporarily allow all for testing)
+                        .requestMatchers("/actuator/**").permitAll()
                         
                         // Allow error page and root endpoint
                         .requestMatchers("/error", "/", "/favicon.ico").permitAll()

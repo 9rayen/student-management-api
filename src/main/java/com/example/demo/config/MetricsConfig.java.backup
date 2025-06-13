@@ -1,0 +1,88 @@
+package com.example.demo.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
+
+/**
+ * Configuration for custom application metrics
+ */
+@Configuration
+public class MetricsConfig {
+
+    @Bean
+    public Counter studentCreationCounter(MeterRegistry meterRegistry) {
+        return Counter.builder("students.created")
+                .description("Number of students created")
+                .tag("operation", "create")
+                .register(meterRegistry);
+    }
+
+    @Bean
+    public Counter studentUpdateCounter(MeterRegistry meterRegistry) {
+        return Counter.builder("students.updated")
+                .description("Number of students updated")
+                .tag("operation", "update")
+                .register(meterRegistry);
+    }
+
+    @Bean
+    public Counter studentDeletionCounter(MeterRegistry meterRegistry) {
+        return Counter.builder("students.deleted")
+                .description("Number of students deleted")
+                .tag("operation", "delete")
+                .register(meterRegistry);
+    }
+
+    @Bean
+    public Counter authenticationAttempts(MeterRegistry meterRegistry) {
+        return Counter.builder("auth.attempts")
+                .description("Number of authentication attempts")
+                .register(meterRegistry);
+    }
+
+    @Bean
+    public Counter authenticationSuccesses(MeterRegistry meterRegistry) {
+        return Counter.builder("auth.successes")
+                .description("Number of successful authentications")
+                .register(meterRegistry);
+    }
+
+    @Bean
+    public Counter authenticationFailures(MeterRegistry meterRegistry) {
+        return Counter.builder("auth.failures")
+                .description("Number of failed authentications")
+                .register(meterRegistry);
+    }
+
+    @Bean
+    public Counter externalApiCalls(MeterRegistry meterRegistry) {
+        return Counter.builder("external.api.calls")
+                .description("Number of external API calls")
+                .register(meterRegistry);
+    }
+
+    @Bean
+    public Counter externalApiErrors(MeterRegistry meterRegistry) {
+        return Counter.builder("external.api.errors")
+                .description("Number of external API errors")
+                .register(meterRegistry);
+    }
+
+    @Bean
+    public Timer externalApiResponseTime(MeterRegistry meterRegistry) {
+        return Timer.builder("external.api.response.time")
+                .description("External API response time")
+                .register(meterRegistry);
+    }
+
+    @Bean
+    public Timer studentOperationTime(MeterRegistry meterRegistry) {
+        return Timer.builder("student.operation.time")
+                .description("Time taken for student operations")
+                .register(meterRegistry);
+    }
+}
