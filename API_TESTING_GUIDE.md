@@ -7,11 +7,22 @@ Your Spring Boot Student Management API is successfully running on:
 - **API Documentation**: `http://localhost:8080/swagger-ui.html`
 - **H2 Database Console**: `http://localhost:8080/h2-console`
 
-## 🔐 Authentication
+## 🔐 JWT Authentication
 
-All endpoints require authentication. Default users:
+The API uses JWT (JSON Web Token) authentication for secure access to all endpoints.
+
+### Default Users:
 - **User**: `user` / `password` (USER role)
-- **Admin**: `admin` / `password` (ADMIN role)
+- **Admin**: `admin` / `admin123` (ADMIN role)
+
+### Authentication Flow:
+1. **Login** → Get JWT token
+2. **Use Token** → Include in Authorization header for API calls
+3. **Token Expires** → Login again after 24 hours
+
+### Authentication Endpoints:
+- `POST /api/v1/auth/login` - Login and receive JWT token
+- `POST /api/v1/auth/validate` - Validate JWT token
 
 ## 📋 Available Endpoints
 
@@ -37,51 +48,189 @@ All endpoints require authentication. Default users:
 - `GET /api/v1/student/statistics` - Comprehensive statistics
 - `GET /api/v1/student/count` - Total student count
 
+## 🧪 JWT Authentication Testing
+
+### Step 1: Login and Get JWT Token
+
+```powershell
+# Login with user credentials
+curl -X POST "http://localhost:8080/api/v1/auth/login" `
+  -H "Content-Type: application/json" `
+  -d '{"username": "user", "password": "password"}'
+```
+
+**Response:**
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "username": "user",
+  "roles": ["USER"],
+  "expiresAt": "2024-01-16T12:00:00Z"
+}
+```
+
+### Step 2: Use JWT Token for API Calls
+
+Extract the token from the login response and use it in the Authorization header:
+
+```powershell
+# Set your token (replace with actual token from login)
+$token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+# Use token to access protected endpoints
+curl -H "Authorization: Bearer $token" `
+  "http://localhost:8080/api/v1/student/"
+```
+
 ## 🧪 Testing Examples
 
-### Using PowerShell/curl
+### Using PowerShell/curl with JWT
 
-#### 1. Get All Students
+#### 1. Complete Authentication Flow
 ```powershell
-curl -u "user:password" "http://localhost:8080/api/v1/student/"
+# Step 1: Login
+$loginResponse = curl -X POST "http://localhost:8080/api/v1/auth/login" `
+  -H "Content-Type: application/json" `
+  -d '{"username": "user", "password": "password"}' | ConvertFrom-Json
+
+# Step 2: Extract token
+$token = $loginResponse.token
+
+# Step 3: Use token for API calls
+curl -H "Authorization: Bearer $token" `
+  "http://localhost:8080/api/v1/student/"
 ```
 
-#### 2. Search Students with Filters
+#### 2. Get All Students with JWT
 ```powershell
-curl -u "user:password" "http://localhost:8080/api/v1/student/search?name=john&minAge=20&maxAge=30&page=0&size=5"
+curl -H "Authorization: Bearer YOUR_JWT_TOKEN" `
+  "http://localhost:8080/api/v1/student/"
 ```
 
-#### 3. Get Statistics
+#### 3. Search Students with Filters and JWT
 ```powershell
-curl -u "user:password" "http://localhost:8080/api/v1/student/statistics"
+curl -H "Authorization: Bearer YOUR_JWT_TOKEN" `
+  "http://localhost:8080/api/v1/student/search?name=john&minAge=20&maxAge=30&page=0&size=5"
 ```
 
-#### 4. Students by Age Range
+#### 4. Create New Student (Admin only) with JWT
 ```powershell
-curl -u "user:password" "http://localhost:8080/api/v1/student/by-age-range?minAge=18&maxAge=25"
+# First login as admin
+$adminResponse = curl -X POST "http://localhost:8080/api/v1/auth/login" `
+  -H "Content-Type: application/json" `
+  -d '{"username": "admin", "password": "admin123"}' | ConvertFrom-Json
+
+$adminToken = $adminResponse.token
+
+# Create new student
+curl -H "Authorization: Bearer $adminToken" `
+  -X POST "http://localhost:8080/api/v1/student/" `
+  -H "Content-Type: application/json" `
+  -d '{"name":"Alice Johnson","email":"alice@example.com","dob":"1999-03-15"}'
 ```
 
-#### 5. Create New Student (Admin only)
+#### 5. Get Statistics with JWT
 ```powershell
-curl -u "admin:password" -X POST "http://localhost:8080/api/v1/student/" -H "Content-Type: application/json" -d '{"name":"Alice Johnson","email":"alice@example.com","dob":"1999-03-15"}'
+curl -H "Authorization: Bearer YOUR_JWT_TOKEN" `
+  "http://localhost:8080/api/v1/student/statistics"
 ```
 
-### Using Postman
+#### 6. Students by Age Range with JWT
+```powershell
+curl -H "Authorization: Bearer YOUR_JWT_TOKEN" `
+  "http://localhost:8080/api/v1/student/by-age-range?minAge=18&maxAge=25"
+```
 
-1. **Set Authentication**: Basic Auth with username/password
-2. **Set Headers**: `Content-Type: application/json` for POST/PUT requests
-3. **Use the endpoints** listed above with the full URLs
+#### 7. Update Student (Admin only) with JWT
+```powershell
+curl -H "Authorization: Bearer $adminToken" `
+  -X PUT "http://localhost:8080/api/v1/student/1" `
+  -H "Content-Type: application/json" `
+  -d '{"name":"Updated Name","email":"updated@example.com","dob":"1995-05-20"}'
+```
 
-### Using JavaScript/Fetch
+#### 8. Delete Student (Admin only) with JWT
+```powershell
+curl -H "Authorization: Bearer $adminToken" `
+  -X DELETE "http://localhost:8080/api/v1/student/1"
+```
+
+### Using Postman with JWT
+
+1. **Step 1**: Create a POST request to `http://localhost:8080/api/v1/auth/login`
+   - Set Body to JSON: `{"username": "user", "password": "password"}`
+   - Send request and copy the token from response
+
+2. **Step 2**: For all other requests:
+   - Set Authorization type to "Bearer Token"
+   - Paste the JWT token in the token field
+   - Set Headers: `Content-Type: application/json` for POST/PUT requests
+
+### Using JavaScript/Fetch with JWT
 
 ```javascript
-// Get statistics with basic auth
-const response = await fetch('http://localhost:8080/api/v1/student/statistics', {
-    headers: {
-        'Authorization': 'Basic ' + btoa('user:password')
+// Login and get JWT token
+async function login(username, password) {
+    const response = await fetch('http://localhost:8080/api/v1/auth/login', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username, password })
+    });
+    const data = await response.json();
+    return data.token;
+}
+
+// Use JWT token to fetch data
+async function getStudents(token) {
+    const response = await fetch('http://localhost:8080/api/v1/student/', {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    });
+    return await response.json();
+}
+
+// Complete example
+async function example() {
+    const token = await login('user', 'password');
+    const students = await getStudents(token);
+    console.log(students);
+}
+```
+
+### Token Validation and Error Handling
+
+```javascript
+// Validate token
+async function validateToken(token) {
+    const response = await fetch('http://localhost:8080/api/v1/auth/validate', {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    });
+    return response.ok;
+}
+
+// Handle token expiration
+async function apiCall(token, url) {
+    const response = await fetch(url, {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    });
+    
+    if (response.status === 401) {
+        console.log('Token expired or invalid. Please login again.');
+        // Redirect to login or refresh token
+        return null;
     }
-});
-const stats = await response.json();
+    
+    return await response.json();
+}
+```
 console.log(stats);
 ```
 

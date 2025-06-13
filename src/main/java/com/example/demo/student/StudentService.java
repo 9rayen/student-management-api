@@ -94,7 +94,7 @@ public class StudentService {
         if (minAge > maxAge) {
             throw new IllegalArgumentException("Minimum age cannot be greater than maximum age");
         }
-        // Since we removed the database query, we'll filter in Java
+        
         return studentRepository.findAll().stream()
             .filter(student -> {
                 int age = student.getAge();

@@ -1,12 +1,40 @@
-# Student Management API - Complex GET Endpoints
+# Student Management API - Endpoints Documentation
 
-This document describes all the complex GET endpoints available in your Spring Boot Student Management API.
+This document describes all the endpoints available in your Spring Boot Student Management API.
 
 ## Authentication
-All endpoints require authentication with either USER or ADMIN role.
+The API uses JWT (JSON Web Token) authentication. All endpoints except `/api/v1/auth/login` require a valid JWT token.
+
+### Authentication Endpoints
+- `POST /api/v1/auth/login` - Login and get JWT token
+- `POST /api/v1/auth/validate` - Validate JWT token
+
+### How to Use Authentication
+1. **Login**: Send POST request to `/api/v1/auth/login` with username/password
+2. **Get Token**: Extract the JWT token from the response
+3. **Use Token**: Include the token in the `Authorization` header as `Bearer <token>`
+
+### Default Users
+- **User**: `user` / `password` (USER role)
+- **Admin**: `admin` / `admin123` (ADMIN role)
 
 ## Base URL
 `http://localhost:8080/api/v1/student`
+
+## Authentication Examples
+
+### Login Request
+```bash
+curl -X POST "http://localhost:8080/api/v1/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{"username": "user", "password": "password"}'
+```
+
+### Using JWT Token in Requests
+```bash
+curl -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  "http://localhost:8080/api/v1/student/"
+```
 
 ## Complex GET Endpoints
 

@@ -1,13 +1,14 @@
 package com.example.demo.config;
 
-import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.oas.models.info.Info;
-import io.swagger.v3.oas.models.info.Contact;
-import io.swagger.v3.oas.models.security.SecurityRequirement;
-import io.swagger.v3.oas.models.security.SecurityScheme;
-import io.swagger.v3.oas.models.Components;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import io.swagger.v3.oas.models.Components;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Contact;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 
 @Configuration
 public class SwaggerConfig {
@@ -16,17 +17,21 @@ public class SwaggerConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("Demo API")
+                        .title("Student Management API")
                         .version("1.0.0")
-                        .description("API documentation for Demo Spring Boot application with Basic Authentication")
+                        .description("API documentation for Student Management Spring Boot application with JWT Authentication")
                         .contact(new Contact()
-                                .name("Demo Team")
-                                .email("demo@example.com")))
-                .addSecurityItem(new SecurityRequirement().addList("basicAuth"))
+                                .name("Student Management Team")
+                                .email("admin@studentapi.com")))
+                .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
                 .components(new Components()
-                        .addSecuritySchemes("basicAuth",
+                        .addSecuritySchemes("bearerAuth",
                                 new SecurityScheme()
                                         .type(SecurityScheme.Type.HTTP)
-                                        .scheme("basic")));
+                                        .scheme("bearer")
+                                        .bearerFormat("JWT")
+                                        .in(SecurityScheme.In.HEADER)
+                                        .name("Authorization")
+                                        .description("Enter JWT token (without 'Bearer' prefix)")));
     }
 }

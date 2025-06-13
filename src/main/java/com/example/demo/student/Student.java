@@ -1,8 +1,15 @@
 package com.example.demo.student;
 
-import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.Period;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 
 @Entity
 @Table(name = "student")
@@ -23,7 +30,7 @@ public class Student {
     @Column(name = "dob", nullable = false)
     private LocalDate dob;
 
-    // Rest of your getters, setters, constructors remain the same...
+    
     public Student() {
     }
 
