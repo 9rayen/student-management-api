@@ -47,27 +47,39 @@ public class SecurityConfig {
 
         return new InMemoryUserDetailsManager(user, admin);
     }    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, 
+                                         JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(authz -> authz
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)).authorizeHttpRequests(authz -> authz
                         // Allow authentication endpoints
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         
-                        // Allow H2 console and Swagger for testing
-                        .requestMatchers("/h2-console/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        // Allow H2 console
+                        .requestMatchers("/h2-console/**").permitAll()
+                        
+                        // Allow Swagger UI and API docs
+                        .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**").permitAll()
+                        
+                        // Allow error page and root endpoint
+                        .requestMatchers("/error", "/", "/favicon.ico").permitAll()
+                        
+                        // Allow static resources
+                        .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
+                        
+                        // Allow demo endpoints without authentication for testing
+                        .requestMatchers("/api/demo/**").permitAll()
 
                         // Student endpoints with role-based access
                         .requestMatchers(HttpMethod.GET, "/api/v1/student/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/v1/student/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/v1/student/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/student/**").hasRole("ADMIN")
-
-                        // All other requests need authentication
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/student/**").hasRole("ADMIN")                        // All other requests need authentication
                         .anyRequest().authenticated()
                 )
-                .headers(headers -> headers.frameOptions().disable()) // For H2 console
+                .headers(headers -> headers
+                        .frameOptions(frameOptions -> frameOptions.sameOrigin()) // For H2 console
+                )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

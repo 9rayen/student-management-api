@@ -1,14 +1,14 @@
 package com.example.demo;
 
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-@Controller
+@RestController
 public class HomeController {
-    @RequestMapping("/")
-
-    public String index() {
-        return null;
+    
+    @GetMapping("/")
+    public ResponseEntity<String> index() {
+        return ResponseEntity.ok("Welcome to Student Management API. Please authenticate using /api/v1/auth/login");
     }
-
 }

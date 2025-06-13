@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -29,11 +30,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private UserDetailsService userDetailsService;
 
     @Autowired
-    private JwtUtil jwtUtil;
+    private JwtUtil jwtUtil;    @Override
+    protected void doFilterInternal(@NonNull HttpServletRequest request, 
+                                  @NonNull HttpServletResponse response, 
+                                  @NonNull FilterChain chain) throws ServletException, IOException {
 
-    @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, 
-                                  FilterChain chain) throws ServletException, IOException {
+        String path = request.getRequestURI();
+        
+        // Skip JWT processing for public endpoints
+        if (isPublicEndpoint(path)) {
+            chain.doFilter(request, response);
+            return;
+        }
 
         final String requestTokenHeader = request.getHeader("Authorization");
 
@@ -50,7 +58,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         } else {
             logger.debug("JWT Token does not begin with Bearer String");
-        }        // Validate token and set authentication
+        }// Validate token and set authentication
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
                 if (jwtUtil.validateToken(jwtToken, username)) {
@@ -70,8 +78,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             } catch (Exception e) {
                 logger.warn("Cannot set user authentication: " + e.getMessage());
             }
-        }
-        
+        }        
         chain.doFilter(request, response);
+    }    /**
+     * Check if the endpoint is public and doesn't require JWT authentication
+     */
+    private boolean isPublicEndpoint(String path) {
+        return path.startsWith("/api/v1/auth/") ||
+               path.startsWith("/h2-console/") ||
+               path.startsWith("/swagger-ui/") ||
+               path.startsWith("/swagger-ui.html") ||
+               path.startsWith("/v3/api-docs/") ||
+               path.startsWith("/swagger-resources/") ||
+               path.startsWith("/api/demo/") ||
+               path.equals("/") ||
+               path.equals("/error") ||
+               path.equals("/favicon.ico") ||
+               path.startsWith("/css/") ||
+               path.startsWith("/js/") ||
+               path.startsWith("/images/") ||
+               path.startsWith("/webjars/");
     }
 }

@@ -31,3 +31,31 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Custom additions ###
+# Log files
+*.log
+
+# H2 Database files
+*.db
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Temporary files
+*.tmp
+*.swp
+*.swo
+
+# Mac
+.DS_Store
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Application logs
+logs/
+spring.log
