@@ -1,7 +1,9 @@
 package com.example.demo.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -43,14 +45,20 @@ public class SecurityConfig {
                 .username("admin")
                 .password(passwordEncoder().encode("admin123"))
                 .roles("ADMIN", "USER")
-                .build();
+                .build();        return new InMemoryUserDetailsManager(user, admin);
+    }
 
-        return new InMemoryUserDetailsManager(user, admin);
-    }    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, 
+    @Bean
+    @Profile("dev")
+    public SecurityFilterChain devFilterChain(HttpSecurity http, 
                                          JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)).authorizeHttpRequests(authz -> authz
+                .csrf(csrf -> csrf
+                    .ignoringRequestMatchers("/h2-console/**")
+                    .disable())                .headers(headers -> headers
+                        .frameOptions(frameOptions -> frameOptions.sameOrigin())) // Allow H2 console frames
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(authz -> authz
                         // Allow authentication endpoints
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         
@@ -59,7 +67,8 @@ public class SecurityConfig {
                         
                         // Allow Swagger UI and API docs
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**").permitAll()
-                          // Allow Actuator endpoints (temporarily allow all for testing)
+                        
+                        // Allow Actuator endpoints (all for development)
                         .requestMatchers("/actuator/**").permitAll()
                         
                         // Allow error page and root endpoint
@@ -75,14 +84,57 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/student/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/v1/student/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/v1/student/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/student/**").hasRole("ADMIN")                        // All other requests need authentication
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/student/**").hasRole("ADMIN")
+                        
+                        // All other requests need authentication
                         .anyRequest().authenticated()
-                )
-                .headers(headers -> headers
-                        .frameOptions(frameOptions -> frameOptions.sameOrigin()) // For H2 console
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    @Bean
+    @Profile("prod")
+    public SecurityFilterChain prodFilterChain(HttpSecurity http, 
+                                      JwtAuthenticationFilter jwtAuthenticationFilter,
+                                      @Value("${spring.h2.console.enabled:false}") boolean h2ConsoleEnabled) throws Exception {
+        
+        HttpSecurity httpSecurity = http
+            .csrf(csrf -> csrf.disable())
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+          if (h2ConsoleEnabled) {
+            httpSecurity
+                .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.sameOrigin()))
+                .authorizeHttpRequests(authz -> authz
+                    .requestMatchers("/api/v1/auth/**").permitAll()
+                    .requestMatchers("/h2-console/**").hasRole("ADMIN") // Restrict H2 console to admins only
+                    .requestMatchers("/actuator/health", "/actuator/info", "/actuator/metrics").permitAll()
+                    .requestMatchers("/error", "/", "/favicon.ico").permitAll()
+                    .requestMatchers("/api/demo/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/v1/student/**").hasAnyRole("USER", "ADMIN")
+                    .requestMatchers(HttpMethod.POST, "/api/v1/student/**").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.PUT, "/api/v1/student/**").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.DELETE, "/api/v1/student/**").hasRole("ADMIN")
+                    .anyRequest().authenticated()
+                );
+        } else {
+            httpSecurity
+                .authorizeHttpRequests(authz -> authz
+                    .requestMatchers("/api/v1/auth/**").permitAll()
+                    .requestMatchers("/actuator/health", "/actuator/info", "/actuator/metrics").permitAll()
+                    .requestMatchers("/error", "/", "/favicon.ico").permitAll()
+                    .requestMatchers("/api/demo/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/v1/student/**").hasAnyRole("USER", "ADMIN")
+                    .requestMatchers(HttpMethod.POST, "/api/v1/student/**").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.PUT, "/api/v1/student/**").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.DELETE, "/api/v1/student/**").hasRole("ADMIN")
+                    .anyRequest().authenticated()
+                );
+        }
+        
+        httpSecurity.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        
+        return httpSecurity.build();
     }
 }

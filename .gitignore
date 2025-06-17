@@ -59,3 +59,13 @@ Desktop.ini
 # Application logs
 logs/
 spring.log
+
+# H2 Database specific files for two-environment setup
+data/
+*.mv.db
+*.trace.db
+*.lock.db
+
+# Environment specific temporary files
+*.pid
+application-local.properties

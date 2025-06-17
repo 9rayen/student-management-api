@@ -1,39 +1,116 @@
-# Student Management API
+# Student Management API - Two Environment Setup
 
-A comprehensive RESTful API for student management built with Spring Boot, featuring JWT authentication, advanced search capabilities, and comprehensive documentation.
+A comprehensive RESTful API for student management built with Spring Boot, featuring **professional two-environment configuration (Development & Production)**, JWT authentication, advanced search capabilities, and comprehensive documentation.
 
 ## 🚀 Features
 
+- **Two-Environment Setup**: Professional Development and Production configurations
 - **JWT Authentication**: Secure token-based authentication with role-based access control
 - **Complete CRUD Operations**: Create, read, update, and delete students
 - **Advanced Search & Filtering**: Multiple search endpoints with pagination and sorting
 - **External API Integration**: Call third-party APIs through your secure endpoints
 - **Role-Based Security**: USER and ADMIN roles with different permissions
 - **Statistics & Analytics**: Comprehensive student statistics and age analytics
-- **Interactive API Documentation**: Swagger/OpenAPI integration
+- **Interactive API Documentation**: Swagger/OpenAPI integration (dev only)
 - **Database Integration**: H2 database with Flyway migrations
+- **Spring Boot Actuator**: Comprehensive monitoring and health checks
+- **Docker Support**: Complete containerization with Docker Compose
 - **Professional Architecture**: Clean, maintainable code structure
+
+## 🏗️ Environment Overview
+
+| Feature | Development | Production |
+|---------|-------------|------------|
+| **Database** | H2 In-Memory | H2 File-based (persistent) |
+| **H2 Console** | ✅ Enabled | ❌ Disabled |
+| **Swagger UI** | ✅ Enabled | ❌ Disabled |
+| **Logging** | DEBUG Level | INFO Level |
+| **JWT Expiration** | 24 hours | 1 hour |
+| **Data Persistence** | Lost on restart | Saved to disk |
+| **Actuator Endpoints** | All exposed | Limited (health, info, metrics) |
 
 ## 🛠️ Technology Stack
 
-- **Framework**: Spring Boot 3.2.1
+- **Framework**: Spring Boot 3.5.0
 - **Security**: Spring Security with JWT
-- **Database**: H2 (development), Flyway for migrations
+- **Database**: H2 (In-memory for dev, File-based for prod), Flyway for migrations
 - **Documentation**: SpringDoc OpenAPI (Swagger)
+- **Monitoring**: Spring Boot Actuator
+- **Containerization**: Docker & Docker Compose
 - **Build Tool**: Maven
-- **Java Version**: 17+
+- **Java Version**: 21+
 
 ## 📋 Prerequisites
 
-- Java 17 or higher
+- Java 21 or higher
 - Maven 3.6+
 - Git
+- Docker (optional, for containerized deployment)
 
 ## 🚀 Quick Start
 
 ### 1. Clone the Repository
 ```bash
 git clone https://github.com/9rayen/student-management-api.git
+cd student-management-api
+```
+
+### 2. Setup Production Directories
+```powershell
+.\setup-prod-dirs.bat
+```
+
+### 3. Run Development Environment
+```powershell
+# Option 1: Using PowerShell script (Recommended)
+.\run-dev.ps1
+
+# Option 2: Using batch file
+.\run-dev.bat
+
+# Option 3: Using Maven directly
+mvn spring-boot:run "-Dspring.profiles.active=dev"
+```
+
+### 4. Run Production Environment
+```powershell
+# Option 1: Using PowerShell script (Recommended)
+.\run-prod.ps1
+
+# Option 2: Using batch file
+.\run-prod.bat
+
+# Option 3: Using Maven directly
+mvn spring-boot:run "-Dspring.profiles.active=prod"
+```
+
+## 🌐 Access URLs
+
+### Development Environment
+- **Application**: http://localhost:8080
+- **H2 Console**: http://localhost:8080/h2-console
+  - JDBC URL: `jdbc:h2:mem:devdb`
+  - Username: `sa`, Password: (empty)
+- **Swagger UI**: http://localhost:8080/swagger-ui.html
+- **Health Check**: http://localhost:8080/actuator/health
+
+### Production Environment  
+- **Application**: http://localhost:8080
+- **Health Check**: http://localhost:8080/actuator/health
+- **Info**: http://localhost:8080/actuator/info
+
+## 🐳 Docker Deployment
+
+```bash
+# Using Docker Compose (Recommended)
+docker-compose up --build
+
+# Run in background
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+```
 cd student-management-api
 ```
 
