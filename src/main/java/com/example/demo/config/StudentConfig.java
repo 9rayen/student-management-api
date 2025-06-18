@@ -1,4 +1,4 @@
-// package com.example.demo.student;
+// package com.example.demo.config;
 
 // import org.springframework.boot.CommandLineRunner;
 // import org.springframework.context.annotation.Bean;
@@ -7,6 +7,9 @@
 // import java.time.LocalDate;
 // import java.time.Month;
 // import java.util.List;
+
+// import com.example.demo.model.Student;
+// import com.example.demo.repository.StudentRepository;
 
 // //@Configuration
 //public class StudentConfig {

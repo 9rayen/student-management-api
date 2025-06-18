@@ -1,4 +1,4 @@
-package com.example.demo.student;
+package com.example.demo.model;
 
 import java.time.LocalDate;
 import java.time.Period;
@@ -9,20 +9,14 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
 
 @Entity
 @Table(name = "student")
 public class Student {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)  // Use IDENTITY for AUTO_INCREMENT
-    private Long id;
-
-    @Column(name = "name", nullable = false)
+    private Long id;    @Column(name = "name", nullable = false)
     private String name;
-
-    @Transient
-    private Integer age;
 
     @Column(name = "email", nullable = false, unique = true)
     private String email;
@@ -61,15 +55,14 @@ public class Student {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public int getAge() {
+    }    public Integer getAge() {
         return Period.between(this.dob, LocalDate.now()).getYears();
     }
 
-    public void setAge(int age) {
-        this.age = age;
-    }
+    // Age is calculated dynamically, so setter is not needed
+    // public void setAge(Integer age) {
+    //     // Age is calculated from date of birth
+    // }
 
     public String getEmail() {
         return email;

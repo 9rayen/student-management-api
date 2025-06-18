@@ -1,4 +1,4 @@
-package com.example.demo.student;
+package com.example.demo.controller;
 
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -19,6 +19,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.example.demo.model.Student;
+import com.example.demo.service.StudentService;
 
 @RestController
 @RequestMapping(path = "api/v1/student")

@@ -1,4 +1,4 @@
-package com.example.demo.student;
+package com.example.demo.service;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -6,7 +6,8 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.example.demo.service.ExternalApiService;
+import com.example.demo.model.Student;
+import com.example.demo.repository.StudentRepository;
 
 /**
  * Service to enrich student data with external API calls

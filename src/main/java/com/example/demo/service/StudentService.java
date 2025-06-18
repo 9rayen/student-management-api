@@ -1,4 +1,4 @@
-package com.example.demo.student;
+package com.example.demo.service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -16,6 +16,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.example.demo.model.Student;
+import com.example.demo.repository.StudentRepository;
 
 @Service
 public class StudentService {
@@ -90,7 +93,9 @@ public class StudentService {
         }
 
         return students;
-    }    public List<Student> getStudentsByAgeRange(int minAge, int maxAge) {
+    }
+
+    public List<Student> getStudentsByAgeRange(int minAge, int maxAge) {
         if (minAge > maxAge) {
             throw new IllegalArgumentException("Minimum age cannot be greater than maximum age");
         }
