@@ -45,7 +45,9 @@ public class AuthController {
     private UserDetailsService userDetailsService;
 
     @Autowired
-    private JwtUtil jwtUtil;    /**
+    private JwtUtil jwtUtil;
+
+    /**
      * Login endpoint to authenticate user and return JWT token
      */
     @PostMapping("/login")
@@ -91,14 +93,15 @@ public class AuthController {
             errorResponse.put("timestamp", LocalDateTime.now());
             errorResponse.put("path", "/api/v1/auth/login");
             
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse);
+        } catch (IllegalArgumentException | NullPointerException e) {
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("error", "Authentication Error");
             errorResponse.put("message", "An unexpected error occurred during authentication. Please try again.");
             errorResponse.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
             errorResponse.put("timestamp", LocalDateTime.now());
             errorResponse.put("path", "/api/v1/auth/login");
-            
+
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }    /**

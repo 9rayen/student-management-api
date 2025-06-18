@@ -105,6 +105,12 @@
 				<artifactId>spring-boot-starter-actuator</artifactId>
 			</dependency>
 
+		<!-- Redis for centralized JWT token management -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-redis</artifactId>
+		</dependency>
+
 		</dependencies>
 
 	<!-- Add profiles configuration -->

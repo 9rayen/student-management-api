@@ -57,10 +57,12 @@ public class SecurityConfig {
                     .ignoringRequestMatchers("/h2-console/**")
                     .disable())                .headers(headers -> headers
                         .frameOptions(frameOptions -> frameOptions.sameOrigin())) // Allow H2 console frames
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(authz -> authz
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))                .authorizeHttpRequests(authz -> authz
                         // Allow authentication endpoints
                         .requestMatchers("/api/v1/auth/**").permitAll()
+                        
+                        // Allow centralized JWT endpoints
+                        .requestMatchers("/api/v1/jwt/**").permitAll()
                         
                         // Allow H2 console
                         .requestMatchers("/h2-console/**").permitAll()
@@ -105,9 +107,9 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
           if (h2ConsoleEnabled) {
             httpSecurity
-                .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.sameOrigin()))
-                .authorizeHttpRequests(authz -> authz
+                .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.sameOrigin()))                .authorizeHttpRequests(authz -> authz
                     .requestMatchers("/api/v1/auth/**").permitAll()
+                    .requestMatchers("/api/v1/jwt/**").permitAll()
                     .requestMatchers("/h2-console/**").hasRole("ADMIN") // Restrict H2 console to admins only
                     .requestMatchers("/actuator/health", "/actuator/info", "/actuator/metrics").permitAll()
                     .requestMatchers("/error", "/", "/favicon.ico").permitAll()
@@ -119,9 +121,9 @@ public class SecurityConfig {
                     .anyRequest().authenticated()
                 );
         } else {
-            httpSecurity
-                .authorizeHttpRequests(authz -> authz
+            httpSecurity                .authorizeHttpRequests(authz -> authz
                     .requestMatchers("/api/v1/auth/**").permitAll()
+                    .requestMatchers("/api/v1/jwt/**").permitAll()
                     .requestMatchers("/actuator/health", "/actuator/info", "/actuator/metrics").permitAll()
                     .requestMatchers("/error", "/", "/favicon.ico").permitAll()
                     .requestMatchers("/api/demo/**").permitAll()
