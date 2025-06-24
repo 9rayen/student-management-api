@@ -5,14 +5,14 @@ import org.springframework.context.annotation.Configuration;
 
 /**
  * JWT Configuration Properties
- * Configuration properties for JWT token management
+ * Configuration properties for JWT token management with centralized service support
  */
 @Configuration
 @ConfigurationProperties(prefix = "jwt")
 public class JwtProperties {
     
     /**
-     * JWT secret key for signing tokens
+     * JWT secret key for signing tokens (used as fallback)
      */
     private String secret = "mySecretKeyForJWTTokenGenerationAndValidationInStudentManagementAPI2025";
     
@@ -32,6 +32,16 @@ public class JwtProperties {
     private boolean enableRevocation = true;
     
     /**
+     * Enable centralized JWT service
+     */
+    private boolean enableCentralizedService = true;
+    
+    /**
+     * Centralized JWT service configuration
+     */
+    private CentralizedService centralizedService = new CentralizedService();
+    
+    /**
      * Redis configuration for centralized storage
      */
     private Redis redis = new Redis();
@@ -40,7 +50,7 @@ public class JwtProperties {
      * Fallback to in-memory storage if Redis is not available
      */
     private boolean fallbackToMemory = true;
-    
+
     // Getters and Setters
     
     public String getSecret() {
@@ -75,6 +85,22 @@ public class JwtProperties {
         this.enableRevocation = enableRevocation;
     }
     
+    public boolean isEnableCentralizedService() {
+        return enableCentralizedService;
+    }
+    
+    public void setEnableCentralizedService(boolean enableCentralizedService) {
+        this.enableCentralizedService = enableCentralizedService;
+    }
+    
+    public CentralizedService getCentralizedService() {
+        return centralizedService;
+    }
+    
+    public void setCentralizedService(CentralizedService centralizedService) {
+        this.centralizedService = centralizedService;
+    }
+    
     public Redis getRedis() {
         return redis;
     }
@@ -89,6 +115,99 @@ public class JwtProperties {
     
     public void setFallbackToMemory(boolean fallbackToMemory) {
         this.fallbackToMemory = fallbackToMemory;
+    }
+    
+    /**
+     * Centralized JWT Service configuration nested class
+     */
+    public static class CentralizedService {
+        
+        private String baseUrl = "http://localhost:8091";
+        private String generateEndpoint = "/api/v1/jwt/generate";
+        private String validateEndpoint = "/api/v1/jwt/validate";
+        private String revokeEndpoint = "/api/v1/jwt/revoke";
+        private int connectionTimeout = 5000; // 5 seconds
+        private int readTimeout = 10000; // 10 seconds
+        private int maxRetries = 3;
+        private boolean enableFallback = true;
+        
+        // Getters and Setters
+        
+        public String getBaseUrl() {
+            return baseUrl;
+        }
+        
+        public void setBaseUrl(String baseUrl) {
+            this.baseUrl = baseUrl;
+        }
+        
+        public String getGenerateEndpoint() {
+            return generateEndpoint;
+        }
+        
+        public void setGenerateEndpoint(String generateEndpoint) {
+            this.generateEndpoint = generateEndpoint;
+        }
+        
+        public String getValidateEndpoint() {
+            return validateEndpoint;
+        }
+        
+        public void setValidateEndpoint(String validateEndpoint) {
+            this.validateEndpoint = validateEndpoint;
+        }
+        
+        public String getRevokeEndpoint() {
+            return revokeEndpoint;
+        }
+        
+        public void setRevokeEndpoint(String revokeEndpoint) {
+            this.revokeEndpoint = revokeEndpoint;
+        }
+        
+        public int getConnectionTimeout() {
+            return connectionTimeout;
+        }
+        
+        public void setConnectionTimeout(int connectionTimeout) {
+            this.connectionTimeout = connectionTimeout;
+        }
+        
+        public int getReadTimeout() {
+            return readTimeout;
+        }
+        
+        public void setReadTimeout(int readTimeout) {
+            this.readTimeout = readTimeout;
+        }
+        
+        public int getMaxRetries() {
+            return maxRetries;
+        }
+        
+        public void setMaxRetries(int maxRetries) {
+            this.maxRetries = maxRetries;
+        }
+        
+        public boolean isEnableFallback() {
+            return enableFallback;
+        }
+        
+        public void setEnableFallback(boolean enableFallback) {
+            this.enableFallback = enableFallback;
+        }
+        
+        public String getFullGenerateUrl() {
+            return baseUrl + generateEndpoint;
+        }
+        
+        public String getFullValidateUrl() {
+            return baseUrl + validateEndpoint;
+        }
+        
+        public String getFullRevokeUrl() {
+            return baseUrl + revokeEndpoint;
+        }
     }
     
     /**

@@ -71,16 +71,12 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**").permitAll()
                         
                         // Allow Actuator endpoints (all for development)
-                        .requestMatchers("/actuator/**").permitAll()
-                        
+                        .requestMatchers("/actuator/**").permitAll()                        
                         // Allow error page and root endpoint
                         .requestMatchers("/error", "/", "/favicon.ico").permitAll()
                         
                         // Allow static resources
                         .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
-                        
-                        // Allow demo endpoints without authentication for testing
-                        .requestMatchers("/api/demo/**").permitAll()
 
                         // Student endpoints with role-based access
                         .requestMatchers(HttpMethod.GET, "/api/v1/student/**").hasAnyRole("USER", "ADMIN")
@@ -110,10 +106,8 @@ public class SecurityConfig {
                 .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.sameOrigin()))                .authorizeHttpRequests(authz -> authz
                     .requestMatchers("/api/v1/auth/**").permitAll()
                     .requestMatchers("/api/v1/jwt/**").permitAll()
-                    .requestMatchers("/h2-console/**").hasRole("ADMIN") // Restrict H2 console to admins only
-                    .requestMatchers("/actuator/health", "/actuator/info", "/actuator/metrics").permitAll()
+                    .requestMatchers("/h2-console/**").hasRole("ADMIN") // Restrict H2 console to admins only                    .requestMatchers("/actuator/health", "/actuator/info", "/actuator/metrics").permitAll()
                     .requestMatchers("/error", "/", "/favicon.ico").permitAll()
-                    .requestMatchers("/api/demo/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/v1/student/**").hasAnyRole("USER", "ADMIN")
                     .requestMatchers(HttpMethod.POST, "/api/v1/student/**").hasRole("ADMIN")
                     .requestMatchers(HttpMethod.PUT, "/api/v1/student/**").hasRole("ADMIN")
@@ -126,7 +120,6 @@ public class SecurityConfig {
                     .requestMatchers("/api/v1/jwt/**").permitAll()
                     .requestMatchers("/actuator/health", "/actuator/info", "/actuator/metrics").permitAll()
                     .requestMatchers("/error", "/", "/favicon.ico").permitAll()
-                    .requestMatchers("/api/demo/**").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/v1/student/**").hasAnyRole("USER", "ADMIN")
                     .requestMatchers(HttpMethod.POST, "/api/v1/student/**").hasRole("ADMIN")
                     .requestMatchers(HttpMethod.PUT, "/api/v1/student/**").hasRole("ADMIN")
