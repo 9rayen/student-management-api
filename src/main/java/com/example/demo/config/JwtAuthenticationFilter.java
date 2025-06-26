@@ -61,7 +61,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     JwtServiceClient.JwtValidationResponse validationResponse = jwtServiceClient.validateToken(jwtToken);
                     
                     if (validationResponse.getValid() != null && validationResponse.getValid()) {
-                        username = validationResponse.getUsername();                    } else {
+                        username = validationResponse.getUsername();
+                        logger.debug("JWT Token validated successfully via centralized service for user: " + username);
+                    } else {
                         logger.warn("JWT Token validation failed via centralized service: " + 
                             validationResponse.getMessage());
                     }
@@ -72,6 +74,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     if (jwtProperties.getCentralizedService().isEnableFallback()) {
                         try {
                             username = jwtUtil.extractUsername(jwtToken);
+                            logger.debug("Fallback to local JWT processing for user: " + username);
                         } catch (RuntimeException ex) {
                             logger.warn("JWT Token error during fallback: " + ex.getMessage());
                         }
@@ -81,6 +84,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // Use local JWT processing
                 try {
                     username = jwtUtil.extractUsername(jwtToken);
+                    logger.debug("Using local JWT processing for user: " + username);
                 } catch (RuntimeException e) {
                     logger.warn("JWT Token error: " + e.getMessage());
                 }
