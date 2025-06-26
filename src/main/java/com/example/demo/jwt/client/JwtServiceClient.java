@@ -158,12 +158,27 @@ public class JwtServiceClient {
         
         logger.debug("Validating JWT token");
         
-        ResponseEntity<JwtValidationResponse> response = restTemplate.exchange(
-            url, HttpMethod.POST, entity, JwtValidationResponse.class);
+        ResponseEntity<CentralizedJwtValidationResponse> response = restTemplate.exchange(
+            url, HttpMethod.POST, entity, CentralizedJwtValidationResponse.class);
         
         if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-            logger.debug("Successfully validated JWT token");
-            return response.getBody();
+            CentralizedJwtValidationResponse centralizedResponse = response.getBody();
+            
+            if (centralizedResponse != null && centralizedResponse.isSuccess() && centralizedResponse.getData() != null) {
+                CentralizedJwtValidationResponse.ValidationData data = centralizedResponse.getData();
+                logger.debug("Successfully validated JWT token via centralized service");
+                
+                return new JwtValidationResponse(
+                    data.getValid(), 
+                    data.getUsername(), 
+                    data.getRole(), 
+                    data.getMessage()
+                );
+            } else {
+                String errorMsg = centralizedResponse != null ? centralizedResponse.getMessage() : "Unknown validation error";
+                logger.warn("JWT token validation failed via centralized service: {}", errorMsg);
+                return new JwtValidationResponse(false, null, null, errorMsg);
+            }
         } else {
             logger.warn("JWT token validation failed. Status: {}", response.getStatusCode());
             return new JwtValidationResponse(false, null, null, "Token validation failed");
@@ -351,6 +366,70 @@ public class JwtServiceClient {
             public void setRole(String role) { this.role = role; }
             public Long getExpiresIn() { return expiresIn; }
             public void setExpiresIn(Long expiresIn) { this.expiresIn = expiresIn; }
+        }
+    }
+
+    /**
+     * Response structure for centralized JWT validation service
+     * Matches format: {success: true, data: {valid, username, role, message}}
+     */
+    public static class CentralizedJwtValidationResponse {
+        private boolean success;
+        private ValidationData data;
+        private String message;
+
+        public CentralizedJwtValidationResponse() {}
+
+        public CentralizedJwtValidationResponse(boolean success, ValidationData data, String message) {
+            this.success = success;
+            this.data = data;
+            this.message = message;
+        }
+
+        // Getters and setters
+        public boolean isSuccess() { return success; }
+        public void setSuccess(boolean success) { this.success = success; }
+        public ValidationData getData() { return data; }
+        public void setData(ValidationData data) { this.data = data; }
+        public String getMessage() { return message; }
+        public void setMessage(String message) { this.message = message; }
+
+        /**
+         * Inner data structure containing JWT validation information
+         */
+        public static class ValidationData {
+            private Boolean valid;
+            private String username;
+            private String role;
+            private String message;
+            private String validatedAt;
+            private String expiresAt;
+            private Long remainingTimeMs;
+
+            public ValidationData() {}
+
+            public ValidationData(Boolean valid, String username, String role, String message) {
+                this.valid = valid;
+                this.username = username;
+                this.role = role;
+                this.message = message;
+            }
+
+            // Getters and setters
+            public Boolean getValid() { return valid; }
+            public void setValid(Boolean valid) { this.valid = valid; }
+            public String getUsername() { return username; }
+            public void setUsername(String username) { this.username = username; }
+            public String getRole() { return role; }
+            public void setRole(String role) { this.role = role; }
+            public String getMessage() { return message; }
+            public void setMessage(String message) { this.message = message; }
+            public String getValidatedAt() { return validatedAt; }
+            public void setValidatedAt(String validatedAt) { this.validatedAt = validatedAt; }
+            public String getExpiresAt() { return expiresAt; }
+            public void setExpiresAt(String expiresAt) { this.expiresAt = expiresAt; }
+            public Long getRemainingTimeMs() { return remainingTimeMs; }
+            public void setRemainingTimeMs(Long remainingTimeMs) { this.remainingTimeMs = remainingTimeMs; }
         }
     }
 

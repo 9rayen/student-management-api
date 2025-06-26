@@ -100,30 +100,46 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // Use centralized service validation or fallback to local
                 if (jwtProperties.isEnableCentralizedService()) {
                     try {
+                        logger.debug("Attempting centralized token validation for user: " + username);
                         JwtServiceClient.JwtValidationResponse validationResponse = jwtServiceClient.validateToken(jwtToken);
                         
-                        if (validationResponse.getValid() != null && validationResponse.getValid()) {
+                        logger.debug("Centralized validation response - Valid: " + 
+                            (validationResponse != null ? validationResponse.getValid() : "null") + 
+                            ", Username: " + (validationResponse != null ? validationResponse.getUsername() : "null") +
+                            ", Role: " + (validationResponse != null ? validationResponse.getRole() : "null"));
+                        
+                        if (validationResponse != null && validationResponse.getValid() != null && validationResponse.getValid()) {
                             isTokenValid = true;
                             role = validationResponse.getRole();
+                            logger.debug("Token validation successful via centralized service for user: " + username);
+                        } else {
+                            logger.warn("Token validation failed via centralized service. Message: " + 
+                                (validationResponse != null ? validationResponse.getMessage() : "null response"));
                         }
                     } catch (Exception e) {
                         logger.warn("Error during centralized token validation: " + e.getMessage());
                         
                         // Fallback to local validation if enabled
                         if (jwtProperties.getCentralizedService().isEnableFallback()) {
+                            logger.debug("Falling back to local token validation for user: " + username);
                             isTokenValid = jwtUtil.validateToken(jwtToken, username);
                             if (isTokenValid) {
                                 role = jwtUtil.extractRole(jwtToken);
+                                logger.debug("Local token validation successful for user: " + username);
                             }
                         }
                     }
                 } else {
                     // Use local validation
+                    logger.debug("Using local token validation for user: " + username);
                     isTokenValid = jwtUtil.validateToken(jwtToken, username);
                     if (isTokenValid) {
                         role = jwtUtil.extractRole(jwtToken);
+                        logger.debug("Local token validation successful for user: " + username + ", role: " + role);
                     }
                 }
+                
+                logger.debug("Final validation result - Valid: " + isTokenValid + ", Role: " + role + ", Username: " + username);
                 
                 if (isTokenValid && role != null) {
                     // Create authorities with ROLE_ prefix for Spring Security
@@ -135,6 +151,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         new UsernamePasswordAuthenticationToken(username, null, authorities);
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
+                    
+                    logger.debug("Successfully set authentication for user: " + username + " with authorities: " + authorities);
+                } else {
+                    logger.warn("Authentication failed for user: " + username + ". Valid: " + isTokenValid + ", Role: " + role);
                 }
             } catch (Exception e) {
                 logger.warn("Cannot set user authentication: " + e.getMessage());
