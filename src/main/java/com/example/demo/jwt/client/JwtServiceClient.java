@@ -40,7 +40,7 @@ public class JwtServiceClient {
         
         for (int attempt = 1; attempt <= retries; attempt++) {
             try {
-                return attemptTokenGeneration(username);
+                return attemptTokenGeneration(username, role);
             } catch (RestClientException e) {
                 logger.warn("Attempt {}/{} failed for JWT token generation: {}", attempt, retries, e.getMessage());
                 
@@ -68,18 +68,18 @@ public class JwtServiceClient {
     /**
      * Internal method to attempt token generation
      */
-    private JwtResponse attemptTokenGeneration(String username) {
+    private JwtResponse attemptTokenGeneration(String username, String role) {
         String url = jwtProperties.getCentralizedService().getFullGenerateUrl();
         
-        // Send only username as per centralized service specification
-        JwtGenerateRequest request = new JwtGenerateRequest(username);
+        // Send username and role to centralized service
+        JwtGenerateRequest request = new JwtGenerateRequest(username, role);
         
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         
         HttpEntity<JwtGenerateRequest> entity = new HttpEntity<>(request, headers);
         
-        logger.debug("Generating JWT token for user: {}", username);
+        logger.debug("Generating JWT token for user: {} with role: {}", username, role);
         
         ResponseEntity<CentralizedJwtResponse> response = restTemplate.exchange(
             url, HttpMethod.POST, entity, CentralizedJwtResponse.class);
@@ -93,10 +93,14 @@ public class JwtServiceClient {
                 
                 // Extract data from nested response structure
                 CentralizedJwtResponse.JwtData data = centralizedResponse.getData();
-                if (data != null && data.getToken() != null && data.getExpiresIn() != null) {
-                    return new JwtResponse(data.getToken(), data.getType(), data.getExpiresIn(), "Success");
+                if (data != null && data.getToken() != null) {
+                    // Handle null values with defaults
+                    String tokenType = data.getType() != null ? data.getType() : "Bearer";
+                    Long expiresIn = data.getExpiresIn() != null ? data.getExpiresIn() : Long.valueOf(jwtProperties.getExpiration());
+                    
+                    return new JwtResponse(data.getToken(), tokenType, expiresIn, "Success");
                 } else {
-                    throw new JwtServiceException("Invalid response data from centralized service - missing token or expiration");
+                    throw new JwtServiceException("Invalid response data from centralized service - missing token");
                 }
             } else {
                 String errorMsg = centralizedResponse != null ? centralizedResponse.getMessage() : "Unknown error";
@@ -220,6 +224,7 @@ public class JwtServiceClient {
 
     public static class JwtGenerateRequest {
         private String username;
+        private String role;
 
         public JwtGenerateRequest() {}
 
@@ -227,9 +232,16 @@ public class JwtServiceClient {
             this.username = username;
         }
 
+        public JwtGenerateRequest(String username, String role) {
+            this.username = username;
+            this.role = role;
+        }
+
         // Getters and setters
         public String getUsername() { return username; }
         public void setUsername(String username) { this.username = username; }
+        public String getRole() { return role; }
+        public void setRole(String role) { this.role = role; }
     }
 
     public static class JwtValidateRequest {

@@ -79,11 +79,21 @@ public class AuthController {
             );            // Load user details
             final UserDetails userDetails = userDetailsService.loadUserByUsername(loginRequest.getUsername());
             
-            // Extract role from authorities - properly extract without ROLE_ prefix
+            // Log user authorities for debugging
+            logger.debug("User '{}' has authorities: {}", loginRequest.getUsername(), userDetails.getAuthorities());
+            
+            // Extract role from authorities - prioritize ADMIN over USER
             String role = userDetails.getAuthorities().stream()
                 .map(authority -> authority.getAuthority().replace("ROLE_", ""))
+                .peek(auth -> logger.debug("Found authority without ROLE_ prefix: {}", auth))
+                .filter(auth -> "ADMIN".equals(auth)) // First try to find ADMIN
                 .findFirst()
-                .orElse("USER");            // Generate JWT token using centralized service or fallback to local
+                .orElse(userDetails.getAuthorities().stream()
+                    .map(authority -> authority.getAuthority().replace("ROLE_", ""))
+                    .findFirst()
+                    .orElse("USER"));
+                
+            logger.debug("Selected role for user '{}': {}", loginRequest.getUsername(), role);            // Generate JWT token using centralized service or fallback to local
             String jwt = null;
             Long expiresIn = null;
             

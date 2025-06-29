@@ -68,7 +68,7 @@ public class SecurityConfig {
                         .requestMatchers("/h2-console/**").permitAll()
                         
                         // Allow Swagger UI and API docs
-                        .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**").permitAll()
+                        .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
                         
                         // Allow Actuator endpoints (all for development)
                         .requestMatchers("/actuator/**").permitAll()                        
@@ -118,6 +118,8 @@ public class SecurityConfig {
             httpSecurity                .authorizeHttpRequests(authz -> authz
                     .requestMatchers("/api/v1/auth/**").permitAll()
                     .requestMatchers("/api/v1/jwt/**").permitAll()
+                    // Allow Swagger UI and API docs in production too
+                    .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
                     .requestMatchers("/actuator/health", "/actuator/info", "/actuator/metrics").permitAll()
                     .requestMatchers("/error", "/", "/favicon.ico").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/v1/student/**").hasAnyRole("USER", "ADMIN")

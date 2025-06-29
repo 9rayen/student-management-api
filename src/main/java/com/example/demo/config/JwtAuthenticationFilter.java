@@ -35,37 +35,54 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private JwtServiceClient jwtServiceClient;
 
     @Autowired
-    private JwtProperties jwtProperties;@Override
+    private JwtProperties jwtProperties;    @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, 
                                   @NonNull HttpServletResponse response, 
                                   @NonNull FilterChain chain) throws ServletException, IOException {
 
         String path = request.getRequestURI();
+        String method = request.getMethod();
+        
+        logger.debug("Processing request: " + method + " " + path);
         
         // Skip JWT processing for public endpoints
         if (isPublicEndpoint(path)) {
+            logger.debug("Skipping JWT processing for public endpoint: " + path);
             chain.doFilter(request, response);
             return;
         }
 
         final String requestTokenHeader = request.getHeader("Authorization");
+        logger.debug("Authorization header: " + (requestTokenHeader != null ? "Bearer [token]" : "null"));
 
         String username = null;
-        String jwtToken = null;        // JWT Token is in the form "Bearer token"
+        String jwtToken = null;
+        
+        logger.debug("Centralized service enabled: " + jwtProperties.isEnableCentralizedService());
+        
+        logger.debug("=== JWT AUTHENTICATION FILTER START ===");
+        logger.debug("Request path: " + path + ", method: " + method);
+        logger.debug("Authorization header present: " + (requestTokenHeader != null));
+        
+        // JWT Token is in the form "Bearer token"
         if (requestTokenHeader != null && requestTokenHeader.startsWith("Bearer ")) {
             jwtToken = requestTokenHeader.substring(7);
+            logger.debug("Extracted token: " + (jwtToken != null ? "Token found (length: " + jwtToken.length() + ")" : "No token"));
             
             // Use centralized service or fallback to local validation
             if (jwtProperties.isEnableCentralizedService()) {
+                logger.debug("Using centralized JWT service for validation");
                 try {
                     JwtServiceClient.JwtValidationResponse validationResponse = jwtServiceClient.validateToken(jwtToken);
+                    logger.debug("Centralized service response received: " + (validationResponse != null ? "Valid response" : "Null response"));
                     
-                    if (validationResponse.getValid() != null && validationResponse.getValid()) {
+                    if (validationResponse != null && validationResponse.getValid() != null && validationResponse.getValid()) {
                         username = validationResponse.getUsername();
+                        logger.debug("Centralized validation SUCCESS - Username: " + username + ", Role: " + validationResponse.getRole());
                         logger.debug("JWT Token validated successfully via centralized service for user: " + username);
                     } else {
                         logger.warn("JWT Token validation failed via centralized service: " + 
-                            validationResponse.getMessage());
+                            (validationResponse != null ? validationResponse.getMessage() : "null response"));
                     }
                 } catch (Exception e) {
                     logger.warn("Error validating JWT token via centralized service: " + e.getMessage());
@@ -91,8 +108,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         } else {
             logger.debug("JWT Token does not begin with Bearer String");
-        }        // Validate token and set authentication
+        }
+        
+        logger.debug("Token extraction complete. Username: " + username + ", Token present: " + (jwtToken != null));
+        
+        // Validate token and set authentication
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            logger.debug("=== TOKEN VALIDATION PHASE ===");
+            logger.debug("Username found: " + username + ", proceeding with validation");
+            logger.debug("Current SecurityContext authentication: " + SecurityContextHolder.getContext().getAuthentication());
+            
             try {
                 String role = null;
                 boolean isTokenValid = false;
@@ -112,6 +137,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             isTokenValid = true;
                             role = validationResponse.getRole();
                             logger.debug("Token validation successful via centralized service for user: " + username);
+                            logger.debug("CENTRALIZED SERVICE RETURNED ROLE: '" + role + "' for user: " + username);
                         } else {
                             logger.warn("Token validation failed via centralized service. Message: " + 
                                 (validationResponse != null ? validationResponse.getMessage() : "null response"));
@@ -142,17 +168,31 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 logger.debug("Final validation result - Valid: " + isTokenValid + ", Role: " + role + ", Username: " + username);
                 
                 if (isTokenValid && role != null) {
-                    // Create authorities with ROLE_ prefix for Spring Security
+                    logger.debug("=== SETTING SECURITY CONTEXT ===");
+                    logger.debug("Setting authentication for user: " + username + " with role: " + role);
+                    
+                    // Create authorities with ROLE_ prefix for Spring Security (check if already prefixed)
                     Collection<GrantedAuthority> authorities = new ArrayList<>();
-                    authorities.add(new SimpleGrantedAuthority("ROLE_" + role));
+                    String roleWithPrefix = role.startsWith("ROLE_") ? role : "ROLE_" + role;
+                    authorities.add(new SimpleGrantedAuthority(roleWithPrefix));
+                    logger.debug("Created authorities: " + authorities);
                     
                     // Create authentication token with JWT-based authorities
                     UsernamePasswordAuthenticationToken authToken = 
                         new UsernamePasswordAuthenticationToken(username, null, authorities);
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    
+                    logger.debug("Created authentication token: " + authToken);
+                    logger.debug("Authentication principal: " + authToken.getPrincipal());
+                    logger.debug("Authentication authorities: " + authToken.getAuthorities());
+                    logger.debug("Authentication is authenticated: " + authToken.isAuthenticated());
+                    
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                     
-                    logger.debug("Successfully set authentication for user: " + username + " with authorities: " + authorities);
+                    logger.debug("Set authentication for user: " + username + " with authorities: " + authToken.getAuthorities());
+                    logger.debug("SecurityContext authentication after setting: " + SecurityContextHolder.getContext().getAuthentication());
+                    logger.debug("SecurityContext principal after setting: " + SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+                    logger.debug("=== SECURITY CONTEXT SET COMPLETE ===");
                 } else {
                     logger.warn("Authentication failed for user: " + username + ". Valid: " + isTokenValid + ", Role: " + role);
                 }
@@ -160,16 +200,36 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 logger.warn("Cannot set user authentication: " + e.getMessage());
             }
         }
+        
+        // Final debug before proceeding to next filter
+        logger.debug("=== JWT AUTHENTICATION FILTER END ===");
+        logger.debug("Final SecurityContext authentication: " + SecurityContextHolder.getContext().getAuthentication());
+        if (SecurityContextHolder.getContext().getAuthentication() != null) {
+            logger.debug("Final authentication principal: " + SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+            logger.debug("Final authentication authorities: " + SecurityContextHolder.getContext().getAuthentication().getAuthorities());
+            logger.debug("Final authentication is authenticated: " + SecurityContextHolder.getContext().getAuthentication().isAuthenticated());
+        } else {
+            logger.debug("Final authentication is NULL - user will be anonymous");
+        }
+        logger.debug("Proceeding to next filter in chain...");
+        
         chain.doFilter(request, response);
     }    /**
      * Check if the endpoint is public and doesn't require JWT authentication
      */
     private boolean isPublicEndpoint(String path) {
-        return path.startsWith("/api/v1/auth/") ||               path.startsWith("/h2-console/") ||
+        logger.debug("Checking if path is public: " + path);
+        
+        boolean isPublic = path.startsWith("/api/v1/auth/") ||
+               path.startsWith("/api/v1/jwt/") ||
+               path.startsWith("/h2-console/") ||
                path.startsWith("/swagger-ui/") ||
                path.startsWith("/swagger-ui.html") ||
+               path.equals("/swagger-ui.html") ||
                path.startsWith("/v3/api-docs/") ||
+               path.equals("/v3/api-docs") ||
                path.startsWith("/swagger-resources/") ||
+               path.startsWith("/actuator/") ||
                path.equals("/") ||
                path.equals("/error") ||
                path.equals("/favicon.ico") ||
@@ -177,5 +237,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                path.startsWith("/js/") ||
                path.startsWith("/images/") ||
                path.startsWith("/webjars/");
+               
+        logger.debug("Path " + path + " is " + (isPublic ? "public" : "protected"));
+        return isPublic;
     }
 }
